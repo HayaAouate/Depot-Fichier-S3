@@ -1,20 +1,42 @@
-
 services:
-###> doctrine/doctrine-bundle ###
   database:
-    image: postgres:${POSTGRES_VERSION:-16}-alpine
+    container_name: cv
+    image: mariadb:10.5.8
+    ports:
+      - "3306:3306"
+    restart: always
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-app}
-      # You should definitely change the password in production
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
-      POSTGRES_USER: ${POSTGRES_USER:-app}
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: cv
+      MYSQL_USER: Haya
+      MYSQL_PASSWORD: haya
     volumes:
-      - database_data:/var/lib/postgresql/data:rw
-      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
-      # - ./docker/db/data:/var/lib/postgresql/data:rw
-###< doctrine/doctrine-bundle ###
+      - ./var/dbdata:/var/lib/mysql
+    networks:
+      - my_network
 
-volumes:
-###> doctrine/doctrine-bundle ###
-  database_data:
-###< doctrine/doctrine-bundle ###
+  phpmyadmin:
+    container_name: phpmyadmin_cv
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: database
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+      UPLOAD_LIMIT: 1G
+      MEMORY_LIMIT: 512M
+      MAX_EXECUTION_TIME: 0
+    restart: always
+    depends_on:
+      - database
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    driver: bridge
+
+
